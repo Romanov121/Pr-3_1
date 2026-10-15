@@ -1,9 +1,51 @@
+const logs = [
+    (firstName, secondName) => `${firstName} вспомнил что-то важное, но неожиданно ${secondName}, не помня себя от испуга, ударил в предплечье врага.`,
+    (firstName, secondName) => `${firstName} поперхнулся, и за это ${secondName} с испугу приложил прямой удар коленом в лоб врага.`,
+    (firstName, secondName) => `${firstName} забылся, но в это время наглый ${secondName}, приняв волевое решение, неслышно подойдя сзади, ударил.`,
+    (firstName, secondName) => `${firstName} пришел в себя, но неожиданно ${secondName} случайно нанес мощнейший удар.`,
+    (firstName, secondName) => `${firstName} поперхнулся, но в это время ${secondName} нехотя раздробил кулаком <вырезанно цензурой> противника.`,
+    (firstName, secondName) => `${firstName} удивился, а ${secondName} пошатнувшись влепил подлый удар.`,
+    (firstName, secondName) => `${firstName} высморкался, но неожиданно ${secondName} провел дробящий удар.`,
+    (firstName, secondName) => `${firstName} пошатнулся, и внезапно наглый ${secondName} беспричинно ударил в ногу противника`,
+    (firstName, secondName) => `${firstName} расстроился, как вдруг, неожиданно ${secondName} случайно влепил стопой в живот соперника.`,
+    (firstName, secondName) => `${firstName} пытался что-то сказать, но вдруг, неожиданно ${secondName} со скуки, разбил бровь сопернику.`
+];
+
+function renderHP() {
+    const {elHP, elProgressbar, damageHP, defaultHP} = this;
+
+    elHP.innerText = damageHP + ' / ' + defaultHP;
+    elProgressbar.style.width = damageHP + '%';
+
+    elProgressbar.classList.remove('low', 'critical');
+    if (damageHP < 20) {
+        elProgressbar.classList.add('critical');
+    } else if (damageHP < 60) {
+        elProgressbar.classList.add('low');
+    }
+}
+
+function changeHP(count) {
+    this.damageHP -= count;
+
+    if (this.damageHP <= 0) {
+        this.damageHP = 0;
+    }
+
+    const log = this === enemy ? generateLog(this, character, count) : generateLog(this, enemy, count);
+    addLog(log);
+
+    this.renderHP();
+}
+
 const character = {
     name: 'Pikachu',
     defaultHP: 100,
     damageHP: 100,
     elHP: document.getElementById('health-character'),
     elProgressbar: document.getElementById('progressbar-character'),
+    renderHP: renderHP,
+    changeHP: changeHP,
 };
 
 const enemy = {
@@ -12,51 +54,49 @@ const enemy = {
     damageHP: 100,
     elHP: document.getElementById('health-enemy'),
     elProgressbar: document.getElementById('progressbar-enemy'),
+    renderHP: renderHP,
+    changeHP: changeHP,
 };
 
-const $btn = document.getElementById('btn-kick');
-const $btn2 = document.getElementById('btn-kick2');
+const [$btn, $btn2] = document.querySelectorAll('.button');
 const $logo = document.querySelector('.logo');
+const $logs = document.getElementById('logs');
 
 function random(num) {
     return Math.ceil(Math.random() * num);
 }
 
-function renderHP(person) {
-    person.elHP.innerText = person.damageHP + ' / ' + person.defaultHP;
-    person.elProgressbar.style.width = person.damageHP + '%';
+function generateLog(firstPerson, secondPerson, count) {
+    const {name: firstName, damageHP, defaultHP} = firstPerson;
+    const {name: secondName} = secondPerson;
+    const text = logs[random(logs.length) - 1](firstName, secondName);
 
-    person.elProgressbar.classList.remove('low', 'critical');
-    if (person.damageHP < 20) {
-        person.elProgressbar.classList.add('critical');
-    } else if (person.damageHP < 60) {
-        person.elProgressbar.classList.add('low');
-    }
+    return `${text} -${count}, [${damageHP}/${defaultHP}]`;
 }
 
-function changeHP(count, person) {
-    person.damageHP -= count;
-
-    if (person.damageHP <= 0) {
-        person.damageHP = 0;
-    }
-    renderHP(person);
+function addLog(text) {
+    const $p = document.createElement('p');
+    $p.innerText = text;
+    $logs.insertBefore($p, $logs.children[0]);
 }
 
 function fight(maxDamage) {
-    changeHP(random(maxDamage), character);
-    changeHP(random(maxDamage), enemy);
+    character.changeHP(random(maxDamage));
+    enemy.changeHP(random(maxDamage));
 
     checkWinner();
 }
 
 function checkWinner() {
-    if (character.damageHP === 0 && enemy.damageHP === 0) {
+    const {name: characterName, damageHP: characterHP} = character;
+    const {name: enemyName, damageHP: enemyHP} = enemy;
+
+    if (characterHP === 0 && enemyHP === 0) {
         endGame('Нічия!');
-    } else if (character.damageHP === 0) {
-        endGame('Бідолашний ' + character.name + ' програв бій!');
-    } else if (enemy.damageHP === 0) {
-        endGame('Бідолашний ' + enemy.name + ' програв бій!');
+    } else if (characterHP === 0) {
+        endGame(`Бідолашний ${characterName} програв бій!`);
+    } else if (enemyHP === 0) {
+        endGame(`Бідолашний ${enemyName} програв бій!`);
     }
 }
 
@@ -67,10 +107,14 @@ function endGame(text) {
 }
 
 function resetGame() {
-    character.damageHP = character.defaultHP;
-    enemy.damageHP = enemy.defaultHP;
-    renderHP(character);
-    renderHP(enemy);
+    const {defaultHP: characterDefaultHP} = character;
+    const {defaultHP: enemyDefaultHP} = enemy;
+
+    character.damageHP = characterDefaultHP;
+    enemy.damageHP = enemyDefaultHP;
+    character.renderHP();
+    enemy.renderHP();
+    $logs.innerHTML = '';
     $btn.disabled = false;
     $btn2.disabled = false;
 }
@@ -85,5 +129,5 @@ $btn2.addEventListener('click', function () {
 
 $logo.addEventListener('click', resetGame);
 
-renderHP(character);
-renderHP(enemy);
+character.renderHP();
+enemy.renderHP();
