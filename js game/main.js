@@ -1,62 +1,45 @@
-const character = {
+import Pokemon from './pokemon.js';
+import random from './utils.js';
+import {generateLog, addLog, clearLogs} from './logs.js';
+
+const player1 = new Pokemon({
     name: 'Pikachu',
-    defaultHP: 100,
-    damageHP: 100,
-    elHP: document.getElementById('health-character'),
-    elProgressbar: document.getElementById('progressbar-character'),
-};
+    type: 'electric',
+    hp: 100,
+    selectors: 'character',
+});
 
-const enemy = {
+const player2 = new Pokemon({
     name: 'Charmander',
-    defaultHP: 100,
-    damageHP: 100,
-    elHP: document.getElementById('health-enemy'),
-    elProgressbar: document.getElementById('progressbar-enemy'),
-};
+    type: 'fire',
+    hp: 100,
+    selectors: 'enemy',
+});
 
-const $btn = document.getElementById('btn-kick');
-const $btn2 = document.getElementById('btn-kick2');
+const [$btn, $btn2] = document.querySelectorAll('.button');
 const $logo = document.querySelector('.logo');
 
-function random(num) {
-    return Math.ceil(Math.random() * num);
-}
-
-function renderHP(person) {
-    person.elHP.innerText = person.damageHP + ' / ' + person.defaultHP;
-    person.elProgressbar.style.width = person.damageHP + '%';
-
-    person.elProgressbar.classList.remove('low', 'critical');
-    if (person.damageHP < 20) {
-        person.elProgressbar.classList.add('critical');
-    } else if (person.damageHP < 60) {
-        person.elProgressbar.classList.add('low');
-    }
-}
-
-function changeHP(count, person) {
-    person.damageHP -= count;
-
-    if (person.damageHP <= 0) {
-        person.damageHP = 0;
-    }
-    renderHP(person);
-}
-
 function fight(maxDamage) {
-    changeHP(random(maxDamage), character);
-    changeHP(random(maxDamage), enemy);
+    player1.changeHP(random(maxDamage), function (count) {
+        addLog(generateLog(player1, player2, count));
+    });
+    player2.changeHP(random(maxDamage), function (count) {
+        addLog(generateLog(player2, player1, count));
+    });
 
     checkWinner();
 }
 
 function checkWinner() {
-    if (character.damageHP === 0 && enemy.damageHP === 0) {
+    const {name: name1, hp: {current: hp1}} = player1;
+    const {name: name2, hp: {current: hp2}} = player2;
+
+    if (hp1 === 0 && hp2 === 0) {
         endGame('Нічия!');
-    } else if (character.damageHP === 0) {
-        endGame('Бідолашний ' + character.name + ' програв бій!');
-    } else if (enemy.damageHP === 0) {
-        endGame('Бідолашний ' + enemy.name + ' програв бій!');
+    } else if (hp1 === 0) {
+        endGame(`Бідолашний ${name1} програв бій!`);
+    } else if (hp2 === 0) {
+        endGame(`Бідолашний ${name2} програв бій!`);
     }
 }
 
@@ -67,10 +50,9 @@ function endGame(text) {
 }
 
 function resetGame() {
-    character.damageHP = character.defaultHP;
-    enemy.damageHP = enemy.defaultHP;
-    renderHP(character);
-    renderHP(enemy);
+    player1.resetHP();
+    player2.resetHP();
+    clearLogs();
     $btn.disabled = false;
     $btn2.disabled = false;
 }
@@ -84,6 +66,3 @@ $btn2.addEventListener('click', function () {
 });
 
 $logo.addEventListener('click', resetGame);
-
-renderHP(character);
-renderHP(enemy);
