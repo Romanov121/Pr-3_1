@@ -479,3 +479,22 @@ h1 {
     opacity: .5;
     cursor: not-allowed;
 }
+
+#logs {
+    max-width: 800px;
+    height: 220px;
+    overflow-y: auto;
+    margin: 0 auto 30px;
+    padding: 10px 20px;
+    text-align: left;
+    background: rgba(255, 255, 255, 0.85);
+    border: 3px solid #00a3e2;
+    border-radius: 10px;
+}
+
+#logs p {
+    margin: 0 0 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ccc;
+    font-size: 16px;
+}
