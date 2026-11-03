@@ -1,9 +1,32 @@
+function renderHP() {
+    this.elHP.innerText = this.damageHP + ' / ' + this.defaultHP;
+    this.elProgressbar.style.width = this.damageHP + '%';
+
+    this.elProgressbar.classList.remove('low', 'critical');
+    if (this.damageHP < 20) {
+        this.elProgressbar.classList.add('critical');
+    } else if (this.damageHP < 60) {
+        this.elProgressbar.classList.add('low');
+    }
+}
+
+function changeHP(count) {
+    this.damageHP -= count;
+
+    if (this.damageHP <= 0) {
+        this.damageHP = 0;
+    }
+    this.renderHP();
+}
+
 const character = {
     name: 'Pikachu',
     defaultHP: 100,
     damageHP: 100,
     elHP: document.getElementById('health-character'),
     elProgressbar: document.getElementById('progressbar-character'),
+    renderHP: renderHP,
+    changeHP: changeHP,
 };
 
 const enemy = {
@@ -12,6 +35,8 @@ const enemy = {
     damageHP: 100,
     elHP: document.getElementById('health-enemy'),
     elProgressbar: document.getElementById('progressbar-enemy'),
+    renderHP: renderHP,
+    changeHP: changeHP,
 };
 
 const $btn = document.getElementById('btn-kick');
@@ -22,30 +47,9 @@ function random(num) {
     return Math.ceil(Math.random() * num);
 }
 
-function renderHP(person) {
-    person.elHP.innerText = person.damageHP + ' / ' + person.defaultHP;
-    person.elProgressbar.style.width = person.damageHP + '%';
-
-    person.elProgressbar.classList.remove('low', 'critical');
-    if (person.damageHP < 20) {
-        person.elProgressbar.classList.add('critical');
-    } else if (person.damageHP < 60) {
-        person.elProgressbar.classList.add('low');
-    }
-}
-
-function changeHP(count, person) {
-    person.damageHP -= count;
-
-    if (person.damageHP <= 0) {
-        person.damageHP = 0;
-    }
-    renderHP(person);
-}
-
 function fight(maxDamage) {
-    changeHP(random(maxDamage), character);
-    changeHP(random(maxDamage), enemy);
+    character.changeHP(random(maxDamage));
+    enemy.changeHP(random(maxDamage));
 
     checkWinner();
 }
@@ -69,8 +73,8 @@ function endGame(text) {
 function resetGame() {
     character.damageHP = character.defaultHP;
     enemy.damageHP = enemy.defaultHP;
-    renderHP(character);
-    renderHP(enemy);
+    character.renderHP();
+    enemy.renderHP();
     $btn.disabled = false;
     $btn2.disabled = false;
 }
@@ -85,5 +89,5 @@ $btn2.addEventListener('click', function () {
 
 $logo.addEventListener('click', resetGame);
 
-renderHP(character);
-renderHP(enemy);
+character.renderHP();
+enemy.renderHP();
